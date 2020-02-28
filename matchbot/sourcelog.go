@@ -12,7 +12,7 @@ const (
 	SCOREUPDATE int8 = 2
 )
 
-func Run_server() {
+func Run_server(logChan chan<- PassedLogs) {
 	packet, err := net.ListenPacket("udp", ":33344")
 	if err != nil {
 		fmt.Println(err)
@@ -31,20 +31,20 @@ func Run_server() {
 		score := regexp.MustCompile(`(?m).+ triggered "SFUI_Notice_.+" \(CT "[0-9]+"\) \(T "[0-9]+"\)`)
 		
 		if command.MatchString(string(buf[30:])) == true {
-			logq.PushBack(PassedLogs{
-				who: addrr.String(),
-				goodLog: string(buf[30:]),
-				typ: COMMAND,
-			})
+			logChan <- PassedLogs{
+			who: addrr.String(),
+			validLog: string(buf[30:]),
+			typ: COMMAND,
+			}
 			continue
 		}
 
 		if score.MatchString(string(buf[30:])) == true {
-			logq.PushBack(PassedLogs{
+			logChan <- PassedLogs{
 				who: addrr.String(),
-				goodLog: string(buf[30:]),
+				validLog: string(buf[30:]),
 				typ: SCOREUPDATE,
-			})
+			}
 			continue
 		}
 	}

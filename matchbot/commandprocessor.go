@@ -4,10 +4,11 @@ import (
 	"fmt"
 )
 
-func Analyze_Commands() {
+func Analyze_Commands(logChan <-chan PassedLogs) {
 	var pass = PassedLogs{}
 
-	fmt.Println(logq.String())
-	pass, _ = logq.PopFront().(PassedLogs)
-	fmt.Println(pass.who)
-}
+	for {
+		pass = <- logChan
+		fmt.Println(pass.who)
+	}
+} 
