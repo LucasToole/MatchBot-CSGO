@@ -13,7 +13,7 @@ const (
 )
 
 func Run_server(logChan chan<- *PassedLogs) {
-	packet, err := net.ListenPacket("udp", ":33344")
+	packet, err := net.ListenPacket("udp", ":" + bot.port)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(2)
