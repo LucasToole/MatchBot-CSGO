@@ -1,0 +1,33 @@
+### This is the Config File for the bot and servers
+### Examples can be found before every section
+### If you mess up real bad, you can find the default on github and copy it over
+
+### Bot section:
+## Name of bot like, eBot, coolbot, Patty.
+# ex. name = "NameOfBot"
+## IP is the bots ip.
+# If the server(s) you want to manage are on your LAN, use your local IP
+# If the server(s) are hosted somewhere else set it to "external" and we'll figure it out for you
+# ex. ip = "10.0.0.25"  or  ip = "external"
+## Port is the port the bot listens on.
+# If you are using an external server you WILL need to port forward (Note this is a UDP connection)
+# For intenal servers you need to specify a port but do not need to port forward
+# ex. port = 13337
+[Bot]
+name = "MatchBot"
+ip = "10.0.0.25"
+port = "13337"
+
+### Server section:
+## IP is the IP of the server you want to manage
+# It does not matter if it is LAN or external here
+# ex. 192.168.0.20
+## Port is the TCP port of the server
+# The default port is 27015 but may be different depending on your hosting
+# Source will listen on the same port for TCP and UDP unless explicitly told not to,
+# so whatever the port is that you connect with will most likely work
+# ex. port = "27015"
+[Server]
+ip = "10.0.0.128"
+port = "27015"
+rconpass = "test"
