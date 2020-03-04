@@ -12,6 +12,11 @@ import (
 type RegexPatterns struct {
 	ready *regexp.Regexp
 	team *regexp.Regexp
+	start *regexp.Regexp
+	force *regexp.Regexp
+	end *regexp.Regexp
+	leave *regexp.Regexp
+	score *regexp.Regexp
 }
 
 var patterns *RegexPatterns // Too wasteful to pass to every function
@@ -38,6 +43,11 @@ func Init_Regex() *RegexPatterns {
 	return &RegexPatterns {
 		ready: regexp.MustCompile(`(?m)(\.|\!|\/)(ready|r|unpause)`),
 		team: regexp.MustCompile(`(?m)<(CT|TERRORIST|Spectator)>`),
+		start: regexp.MustCompile(`(?m)(\.|\!|\/)(start|map|maps)`),
+		force: regexp.MustCompile(`(?m)(\.|\!|\/)(force)`),
+		end: regexp.MustCompile(`(?m)(\.|\!|\/)(end|stop)`),
+		leave: regexp.MustCompile(`(?m)(\.|\!|\/)(leave|exit)`),
+		score: regexp.MustCompile(`(?m)(\.|\!|\/)(score)`),
 	}
 }
 
