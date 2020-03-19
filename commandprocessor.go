@@ -82,8 +82,7 @@ func Handle_Commands(command *PassedLogs, cmdQ chan<- *CommandInfo) {
 	}
 
 	if patterns.pause.MatchString(command.validLog) {
-		if !serv.isPaused {
-			serv.isPaused = true
+		if Pause_Match(Check_Team(command.validLog)) {
 			cmdQ <- &CommandInfo{
 				conn: command.conn,
 				cmd: "mp_pause_match",
@@ -93,8 +92,7 @@ func Handle_Commands(command *PassedLogs, cmdQ chan<- *CommandInfo) {
 	}
 
 	if patterns.unpause.MatchString(command.validLog) {
-		if serv.isPaused {
-			serv.isPaused = false
+		if Unpause_Match(Check_Team(command.validLog)) {
 			cmdQ <- &CommandInfo{
 				conn: command.conn,
 				cmd: "mp_unpause_match",
@@ -139,14 +137,29 @@ func Check_Team(logLine string) int8 {
 }
 
 func Start_Match() {
+	serv.isWarmup = false
+	serv.isPaused = false
+	serv.ready = 0
 	fmt.Println("This func will soon start a match")
 	return
 }
 
-func Pause_Match() {
-	
+func Pause_Match(team int8) (bool) {
+	if !serv.isPaused && team > 0 {
+		serv.isPaused = true
+		serv.ready = 0
+		return true
+	}
+	return false
 }
 
-func Unpause_Match() {
-	
+func Unpause_Match(team int8) (bool) {
+	if serv.isPaused {
+		Ready_Up(team)
+		if Match_Ready() {
+			serv.isPaused = false
+			return true
+		}
+	}
+	return false
 }
