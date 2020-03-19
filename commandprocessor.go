@@ -11,6 +11,8 @@ import (
 /* Set up regexes globally */
 type RegexPatterns struct {
 	ready *regexp.Regexp
+	pause *regexp.Regexp
+	unpause *regexp.Regexp
 	team *regexp.Regexp
 	start *regexp.Regexp
 	force *regexp.Regexp
@@ -41,7 +43,9 @@ func Analyze_Logs(logChan <-chan *PassedLogs, cmdQ chan<- *CommandInfo) {
 
 func Init_Regex() *RegexPatterns {
 	return &RegexPatterns {
-		ready: regexp.MustCompile(`(?m)(\.|\!|\/)(ready|r|unpause)`),
+		ready: regexp.MustCompile(`(?m)(\.|\!|\/)(ready|r)`),
+		pause: regexp.MustCompile(`(?m)(\.|\!|\/)(pause)`),
+		unpause: regexp.MustCompile(`(?m)(\.|\!|\/)(unpause)`),
 		team: regexp.MustCompile(`(?m)<(CT|TERRORIST|Spectator)>`),
 		start: regexp.MustCompile(`(?m)(\.|\!|\/)(start|map|maps)`),
 		force: regexp.MustCompile(`(?m)(\.|\!|\/)(force)`),
@@ -76,6 +80,29 @@ func Handle_Commands(command *PassedLogs, cmdQ chan<- *CommandInfo) {
 		}
 		return
 	}
+
+	if patterns.pause.MatchString(command.validLog) {
+		if !serv.isPaused {
+			serv.isPaused = true
+			cmdQ <- &CommandInfo{
+				conn: command.conn,
+				cmd: "mp_pause_match",
+			}
+		}
+		return
+	}
+
+	if patterns.unpause.MatchString(command.validLog) {
+		if serv.isPaused {
+			serv.isPaused = false
+			cmdQ <- &CommandInfo{
+				conn: command.conn,
+				cmd: "mp_unpause_match",
+			}
+		}
+		return
+	}
+	
 }
 
 func Ready_Up(readyTeam int8) (bool) { // Should take index of server in future
@@ -114,4 +141,12 @@ func Check_Team(logLine string) int8 {
 func Start_Match() {
 	fmt.Println("This func will soon start a match")
 	return
+}
+
+func Pause_Match() {
+	
+}
+
+func Unpause_Match() {
+	
 }
