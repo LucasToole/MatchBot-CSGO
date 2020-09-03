@@ -50,7 +50,7 @@ func Init_Server() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	
+
 	bot.name = config.Get("Bot.name").(string)
 	bot.fullAddr = (config.Get("Bot.ip").(string) + ":" + config.Get("Bot.port").(string))
 	bot.port = config.Get("Bot.port").(string)
@@ -66,7 +66,6 @@ func Init_Server() {
 	/* Initiate Rcon Conenctions */
 	serv.conn, _, err = rcon.RconInitConnection(serv.addr, serv.port, serv.rconPass)
 	if err != nil {
-		fmt.Println(err)
 		os.Exit(2) // For now stop the program. When multiple servers becomes real just move on.
 	}
 	rcon.RconSend(serv.conn, 2, "logaddress_add " + bot.fullAddr)
@@ -78,16 +77,23 @@ func main() {
 	logChan := make(chan *PassedLogs, 10)
 	cmdQ := make(chan *CommandInfo, 10)
 
+	fmt.Println("Running CS:GO MatchBot") // TODO: Possible version number in future?
+	fmt.Println("Initiating connection to server...")
 	Init_Server()
-	
+	// TODO: "Successfully connected to <LIST OF IPS>"
+
+	fmt.Println("Starting Log Listener...")
 	go Run_server(logChan)
+
+	fmt.Println("Starting Log Analyzer...")
 	go Analyze_Logs(logChan, cmdQ)
 
+	fmt.Printf("Done! Matchbot running for %d servers\n", 1) // TODO: Init_server() should return number of successful conenctions
+
 	var rcmd *CommandInfo
-	
+
 	for {
 		rcmd = <-cmdQ
 		rcon.RconSend(rcmd.conn, 2, rcmd.cmd)
 	}
 }
-
