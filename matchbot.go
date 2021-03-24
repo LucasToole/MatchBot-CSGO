@@ -33,7 +33,6 @@ type BotInfo struct {
 type ServerInfo struct {
 	conn net.Conn
 	est bool
-	fullAddr string
 	addr string
 	port string
 	rconPass string
@@ -53,13 +52,13 @@ func Init_Server() int {
 	}
 
 	bot.name = config.Get("Bot.name").(string)
+	// TODO: When CS:GO supports IPv6 the format for v6 addresses will probably need to be -> [2001:db8:beef::e]:13337
 	bot.fullAddr = (config.Get("Bot.ip").(string) + ":" + config.Get("Bot.port").(string))
 	bot.port = config.Get("Bot.port").(string)
 
 	for i := 0; i < 1; i++ { // TODO: Get the number of servers in the config file
 		server[i].addr = config.Get("Server.ip").(string)
 		server[i].port = config.Get("Server.port").(string)
-		server[i].fullAddr = server[i].addr + ":" + server[i].port // TODO: When CS:GO supports IPv6 the format will need to change for v6 addresses -> [2001:db8:beef::e]:27015
 		server[i].rconPass = config.Get("Server.rconpass").(string)
 		server[i].isInit = true // Temp
 		server[i].isWarmup = true // Temp
@@ -97,7 +96,7 @@ func main() {
 	fmt.Println("RCON Connection established for: ")
 	for i := range server {
 		if server[i].est == true {
-			fmt.Println(server[i].fullAddr)
+			fmt.Println(server[i].addr + ":" + server[i].port)
 		}
 	}
 

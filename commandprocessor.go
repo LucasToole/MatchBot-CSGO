@@ -56,7 +56,7 @@ func Init_Regex() *RegexPatterns {
 
 func Determine_Server(pass *PassedLogs) int {
 	for  i := range server {
-		if pass.who == server[i].fullAddr {
+		if pass.who == (server[i].addr + ":" + server[i].port) { // TODO: Not IPv6 safe
 			return i
 		}
 	}
