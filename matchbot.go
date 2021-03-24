@@ -13,7 +13,7 @@ import (
 
 type PassedLogs struct {
 	conn net.Conn
-	index int8
+	serv_index int
 	who string
 	validLog string
 	typ int8 /* Shouldn't need more than this */
@@ -32,6 +32,7 @@ type BotInfo struct {
 
 type ServerInfo struct {
 	conn net.Conn
+	est bool
 	fullAddr string
 	addr string
 	port string
@@ -42,10 +43,10 @@ type ServerInfo struct {
 	isPaused bool
 }
 
-var serv *ServerInfo = new(ServerInfo)
 var bot *BotInfo = new(BotInfo)
+var server = make([]ServerInfo, 32) /* Who needs more than 32 Servers TODO: Uncap? Custom value? */
 
-func Init_Server() {
+func Init_Server() int {
 	config, err := toml.LoadFile("config.toml")
 	if err != nil {
 		fmt.Println(err)
@@ -55,32 +56,50 @@ func Init_Server() {
 	bot.fullAddr = (config.Get("Bot.ip").(string) + ":" + config.Get("Bot.port").(string))
 	bot.port = config.Get("Bot.port").(string)
 
-	serv.addr = config.Get("Server.ip").(string)
-	serv.port = config.Get("Server.port").(string)
-	serv.fullAddr = serv.addr + ":" + serv.port
-	serv.rconPass = config.Get("Server.rconpass").(string)
-	serv.isInit = true // Temp
-	serv.isWarmup = true // Temp
-	serv.isPaused = false
+	for i := 0; i < 1; i++ { // TODO: Get the number of servers in the config file
+		server[i].addr = config.Get("Server.ip").(string)
+		server[i].port = config.Get("Server.port").(string)
+		server[i].fullAddr = server[i].addr + ":" + server[i].port // TODO: When CS:GO supports IPv6 the format will need to change for v6 addresses -> [2001:db8:beef::e]:27015
+		server[i].rconPass = config.Get("Server.rconpass").(string)
+		server[i].isInit = true // Temp
+		server[i].isWarmup = true // Temp
+		server[i].isPaused = false
+		server[i].est = false
+	}
 
 	/* Initiate Rcon Conenctions */
-	serv.conn, _, err = rcon.RconInitConnection(serv.addr, serv.port, serv.rconPass)
-	if err != nil {
-		os.Exit(2) // For now stop the program. When multiple servers becomes real just move on.
+	var connectionCount int = 0
+	for i := range server { // TODO: Range loops through all 32 elements
+		server[i].conn, _, err = rcon.RconInitConnection(server[i].addr, server[i].port, server[i].rconPass)
+		if err != nil {
+			continue
+		}
+		rcon.RconSend(server[i].conn, 2, "logaddress_add " + bot.fullAddr)
+		rcon.RconSend(server[i].conn, 2, "say The match is being managed by " + bot.name + "!")
+		rcon.RconSend(server[i].conn, 2, "say Admin: Type .start to initiate a game")
+		server[i].est = true
+		connectionCount++
 	}
-	rcon.RconSend(serv.conn, 2, "logaddress_add " + bot.fullAddr)
-	rcon.RconSend(serv.conn, 2, "say The match is being managed by " + bot.name + "!")
-	rcon.RconSend(serv.conn, 2, "say Admin: Type .start to initiate a game")
+	if connectionCount == 0 {
+		fmt.Println("Error: Could not connect to any servers")
+		os.Exit(2)
+	}
+	return connectionCount
 }
 
 func main() {
 	logChan := make(chan *PassedLogs, 10)
 	cmdQ := make(chan *CommandInfo, 10)
 
-	fmt.Println("Running CS:GO MatchBot") // TODO: Possible version number in future?
+	fmt.Println("Running CS:GO MatchBot")
 	fmt.Println("Initiating connection to server...")
-	Init_Server()
-	// TODO: "Successfully connected to <LIST OF IPS>"
+	connectionCount := Init_Server()
+	fmt.Println("RCON Connection established for: ")
+	for i := range server {
+		if server[i].est == true {
+			fmt.Println(server[i].fullAddr)
+		}
+	}
 
 	fmt.Println("Starting Log Listener...")
 	go Run_server(logChan)
@@ -88,7 +107,7 @@ func main() {
 	fmt.Println("Starting Log Analyzer...")
 	go Analyze_Logs(logChan, cmdQ)
 
-	fmt.Printf("Done! Matchbot running for %d servers\n", 1) // TODO: Init_server() should return number of successful conenctions
+	fmt.Printf("Done! Matchbot running for %d servers\n", connectionCount)
 
 	var rcmd *CommandInfo
 
