@@ -6,6 +6,7 @@ import (
 	"net"
 	"fmt"
 	"os"
+	"flag"
 
 	"github.com/pelletier/go-toml"
 	"github.com/LucasToole/SourceRcon-go/rcon"
@@ -45,10 +46,11 @@ type ServerInfo struct {
 var bot *BotInfo = new(BotInfo)
 var server = make([]ServerInfo, 32) /* Who needs more than 32 Servers TODO: Uncap? Custom value? */
 
-func Init_Server() int {
-	config, err := toml.LoadFile("config.toml")
+func Init_Server(configfile *string) int {
+	config, err := toml.LoadFile(*configfile)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(2)
 	}
 
 	bot.name = config.Get("Bot.name").(string)
@@ -90,9 +92,12 @@ func main() {
 	logChan := make(chan *PassedLogs, 10)
 	cmdQ := make(chan *CommandInfo, 10)
 
+	configfile := flag.String("cfg", "config.toml", "The configuration file to use")
+	flag.Parse()
+
 	fmt.Println("Running CS:GO MatchBot")
 	fmt.Println("Initiating connection to server...")
-	connectionCount := Init_Server()
+	connectionCount := Init_Server(configfile)
 	fmt.Println("RCON Connection established for: ")
 	for i := range server {
 		if server[i].est == true {
